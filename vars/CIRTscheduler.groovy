@@ -1,9 +1,8 @@
 #!/usr/bin/env groovy
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2017,2018 Linutronix GmbH
 /*
  * CI-RT scheduler job
- *
- * Copyright (c) 2017,2018 Linutronix GmbH
  */
 
 import de.linutronix.cirt.VarNotSetException;
