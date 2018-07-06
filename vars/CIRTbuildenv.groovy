@@ -190,8 +190,8 @@ private buildArchCompileEnv(List configs)
 	}
 }
 
-private prepareCyclictestEnv(String boottest) {
-	def content = readCleanFile(boottest);
+private prepareCyclictestEnv(String content) {
+	def testsprop = "";
 
 	if (content =~ /\s*CYCLICTEST\s*=.*/) {
 		def cyclictest = content =~ /\s*CYCLICTEST\s*=.*/
@@ -199,7 +199,9 @@ private prepareCyclictestEnv(String boottest) {
 
 		cyclictests = list2prop(cyclictest, "CYCLICTESTS");
 		cyclictest = null
-		content += cyclictests;
+
+		testsprop = cyclictests;
+
 		cyclictests -= ~/\s*CYCLICTESTS\s*=/
 		cyclictests = safesplit.split(cyclictests);
 
@@ -209,12 +211,16 @@ private prepareCyclictestEnv(String boottest) {
 		}
 	}
 
-	writeFile(file:"${boottest}.properties", text:content);
+	return testsprop;
 }
 
-private buildCyclictestEnv(List boottests) {
-	boottests.each { boottest ->
-		prepareCyclictestEnv(boottest);
+private buildBootTestEnv(List boottests) {
+	for (int i = 0; i < boottests.size(); i++) {
+		def test = boottests.getAt(i);
+		def content = readCleanFile(test);
+		content += prepareCyclictestEnv(content);
+
+		writeFile(file:"${test}.properties", text:content);
 	}
 }
 
@@ -292,7 +298,7 @@ private buildCompileEnv(String globalenv) {
 
 	if (boottests) {
 		buildCompBootEnv(configs, overlays);
-		buildCyclictestEnv(boottests);
+		buildBootTestEnv(boottests);
 	}
 }
 
