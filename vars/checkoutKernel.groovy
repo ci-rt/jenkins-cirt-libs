@@ -27,7 +27,8 @@ def call(Map global) {
 
 				h = null;
 				dir('src') {
-					gitCheckout(gitrepo, gitcheckout, null);
+					def ref = env.LINUX_KERNEL_MIRROR;
+					gitCheckout(gitrepo, gitcheckout, ref);
 				}
 			}
 		}
