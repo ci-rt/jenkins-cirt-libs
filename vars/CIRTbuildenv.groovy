@@ -215,12 +215,44 @@ private prepareTestEnv(String testname, String content) {
 	return testsprop;
 }
 
+private getGenerictestScripts(String test, String content) {
+	if (content =~ /\s*GENERICTESTS\s*=.*/) {
+		def descr = content =~ /\s*GENERICTESTS\s*=.*/
+
+		descr = descr[0] - ~/\s*GENERICTESTS\s*=/
+		descr = safesplit.split(descr);
+
+		String scripts = null;
+		for (int i = 0; i < descr.size(); i++) {
+			def conffile = descr.getAt(i);
+			def conf = readCleanFile(conffile) =~ /\s*SCRIPT\s*=.*/
+			def script = conf[0] - ~/\s*SCRIPT\s*=/;
+			conffile = null;
+
+			if (script) {
+				if (scripts) {
+					scripts += ", ${script}"
+				} else {
+					scripts = "${script}"
+				}
+			}
+		}
+
+		stash(includes: scripts,
+		      name: "generictest_${test}".replaceAll('/','_'));
+	}
+}
+
 private buildBootTestEnv(List boottests) {
 	for (int i = 0; i < boottests.size(); i++) {
 		def test = boottests.getAt(i);
 		def content = readCleanFile(test);
 		content += prepareTestEnv("CYCLICTEST", content);
-
+		def gt = prepareTestEnv("GENERICTEST", content);
+		if (gt) {
+			content += gt;
+			getGenerictestScripts(test, content);
+		}
 		writeFile(file:"${test}.properties", text:content);
 	}
 }

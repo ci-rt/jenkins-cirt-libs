@@ -302,6 +302,12 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 						   recipients);
 				}
 
+				def generictests = safesplit.split(helper.getVar("GENERICTESTS", " "));
+				if (generictests) {
+					generictest(global, target,
+						    generictests, recipients);
+				}
+
 				println("Not forced reboot into default kernel");
 				rebootTarget(hypervisor, target, seriallog_default, false, false);
 				checkOnline(target, false, false);
