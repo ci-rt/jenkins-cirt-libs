@@ -344,7 +344,10 @@ private failnotify(Map global, String subject, String template, String repo,
 		 */
 		def forcedboot = extras['forcedboot'];
 		if (!forcedboot) {
-			sh("cp ../${resultdir}/boot.log .");
+			/* there is no bootlog for skipped targets */
+			if (template != "offlineTarget") {
+				sh("cp ../${resultdir}/boot.log .");
+			}
 		}
 
 		def gittags = readFile "${results}/compile/gittags.properties";
@@ -384,6 +387,10 @@ def call(Map global, String boottest, String recipients) {
 		inputcheck.check(global);
 		dir("boottestRunner") {
 			deleteDir();
+
+			def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
+			writeFile file:"boottest2xml", text:script_content;
+			script_content = null;
 
 			unstash(global.STASH_PRODENV);
 			String[] properties = ["environment.properties",
@@ -433,7 +440,16 @@ def call(Map global, String boottest, String recipients) {
 	} catch (TargetOnOfflineException ex) {
 		println("On/Offline problem with target: ${target}");
 
-		resultdir = "boottestRunner/${boottestdir}/" + resultdir;
+		/* stash a boottest result, because db feeder excepts one */
+		resultdir = "${boottestdir}/" + resultdir;
+		sh "mkdir -p $resultdir"
+		sh("python3 boottestRunner/boottest2xml ${boottest} ${boottestdir} --skip")
+		archiveArtifacts(artifacts: "${resultdir}/**",
+				 fingerprint: true);
+		stash(name: boottest.replaceAll('/','_'),
+		      includes: "${resultdir}/pyjutest.xml");
+		junit("${resultdir}/pyjutest.xml");
+
 		/* inform both: test user and test system admins */
 		failnotify(global,
 			   "On/Offline problem with target: ${target}",
@@ -443,6 +459,9 @@ def call(Map global, String boottest, String recipients) {
 			   target);
 		/* act like junit and mark test as UNSTABLE */
 		currentBuild.result = 'UNSTABLE';
+
+		println("On/Offline problem handling DONE");
+
 		return;
 	} catch(Exception ex) {
 		if (ex instanceof VarNotSetException) {
@@ -472,10 +491,6 @@ def call(Map global, String boottest, String recipients) {
 				 parserConfigurations: [[parserName: 'Linux Kernel Output Parser',
 							 pattern: "${resultdir}/boot.log"]],
 				 unHealthy: '');
-
-			def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
-			writeFile file:"boottest2xml", text:script_content;
-			script_content = null;
 
 			/*
 			 * Do not stash boot log on boot failures:
