@@ -488,7 +488,7 @@ def call(Map global, String boottest, String recipients) {
 				"${resultdir}/cmdline";
 
 			if (failed) {
-				sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
+				sh("python3 boottest2xml ${boottest} ${boottestdir} --failure")
 			} else {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
 				attachments = "${attachments}, ${resultdir}/boot.log";
