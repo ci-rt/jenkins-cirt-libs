@@ -79,6 +79,8 @@ def parse_junit(filename):
                 result = "failure"
             elif (type(case.result) is Error):
                 result = "error"
+            elif (type(case.result) is Skipped):
+                result = "skipped"
             else:
                 result = "error"
             if (case.system_out):
@@ -531,6 +533,9 @@ for boottest in boottests:
         junit_res = parse_junit(
             join(result_path, boottest, "boottest", "pyjutest.xml")
                 )
+        if (junit_res["result"] == "skipped"):
+            print("%s SKIPPED\n" % boottest)
+            continue
         with open(join(result_path, boottest, "boottest",
                   "cmdline"), 'r') as fd:
             cmdline = fd.read()
