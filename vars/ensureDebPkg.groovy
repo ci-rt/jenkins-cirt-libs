@@ -44,7 +44,7 @@ def call(Map p = [:])
 			check_pkgversion(pkg, dver);
 		} catch (err) {
 			// ensure reinstall and dont fail if not installed
-			sh("sudo apt-get --yes purge $pkg | /bin/true");
+			sh("sudo apt-get --yes purge $pkg || /bin/true");
 			// TODO guess suite name if not specified
 			sh("echo \'$p.ensure_repo\' | sudo tee /etc/apt/sources.list.d/ensure.list");
 			if (dver != "None") {
