@@ -10,7 +10,7 @@ import de.linutronix.lib4lib.logger;
 def call(String classname, String name, String cmd) {
 	try {
 		Map enspkg = [:];
-		enspkg.ensure_pkgs = [[name: 'pyjutest', version: '1.6+stretch251']];
+		enspkg.ensure_pkgs = [[name: 'pyjutest', version: '1.7+deb9+build61']];
 		// TODO skip suite name here and set it in ensureDebPkg
 		enspkg.ensure_repo = "deb http://debian.linutronix.de/tools stretch main";
 		enspkg.ensure_repo_key = "http://debian.linutronix.de/tools/repo.pub";
