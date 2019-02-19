@@ -74,23 +74,13 @@ private runner(Map global, String repo, String branch,
 	try {
 		dir(compiledir) {
 			deleteDir();
-			/*
-			 * Specify a depth of 1. If last commit is no tag "git
-			 * describe HEAD" will not work. Fetching the whole
-			 * history precautionary, takes a lot of time and is
-			 * not required when the last commit is a
-			 * tag. Fetching the required history is done before
-			 * writing the gittags.properties file when required
-			 * (see comment below as well).
-			 */
-			checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
-				  doGenerateSubmoduleConfigurations: false,
-				  extensions: [[$class: 'CloneOption',
-						depth: 1, noTags: false,
-						reference: '/home/mirror/kernel',
-						shallow: true, timeout: 60]],
-				  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
+			/* get kernel */
+			def kernelsrcstash = "${repo}_${branch}".replaceAll(/[\/:]/,'_');
+			unstash(kernelsrcstash);
 
+			/* restore links (dereference behaviour in stashes) */
+			sh("git clean -dxf");
+			sh("git reset --hard");
 			dir(".env") {
 				unstash(global.STASH_PRODENV);
 				unstash(global.STASH_COMPILECONF);

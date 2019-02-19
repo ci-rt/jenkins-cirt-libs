@@ -68,6 +68,30 @@ def call(body) {
 				}
 			}
 
+			stage('checkout kernel source') {
+				steps {
+					script {
+						try {
+							checkoutKernel(params);
+						} catch(VarNotSetException ex) {
+							notify("${recipients}",
+							       "Testdescription is not valid",
+							       "invalidDescr",
+							       null,
+							       false,
+							       ["failureText": ex.toString()]);
+							currentBuild.result = 'UNSTABLE';
+						} catch(Exception ex) {
+							println("kernel checkout failed:");
+							println(ex.toString());
+							println(ex.getMessage());
+							println(ex.getStackTrace());
+							error("kernel checkout failed.");
+						}
+					}
+				}
+			}
+
 			stage('notify test start') {
 				steps {
 					notify("${recipients}",
