@@ -180,7 +180,7 @@ repository):
 
 * openjdk-8-jre-headless
 
-On the slave with the label "kernel", a CI-RT specific packages is required
+On the slaves a CI-RT specific packages is required.
 (available on a custom Debian repository http://debian.linutronix.de/tools):
 
 * pyjutest
