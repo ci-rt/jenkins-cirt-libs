@@ -26,17 +26,31 @@ private runner(Map global, String target, String generictest) {
 
 	def kernel = "${config}/${overlay}";
 	def generictestdir = "results/${kernel}/${target}/${generictest}";
+	def props = readFile("${generictest}.properties");
 
 	dir(generictestdir) {
 		deleteDir();
 		unstash("generictest_boot_${target}".replaceAll('/','_'));
 		println("generictest-runner: ${target} ${generictest} ${script}");
+		def content = readFile(script);
 
-		shunit("generictest", "${generictest}", "bash ${script}");
+		/* determine shebang */
+		def shebang = "#! /bin/bash"
+		if (content.substring(0, 2) == "#!") {
+			shebang = content.split('\n')[0];
+			content = content.split('\n').drop(1).join('\n');
+		}
+
+		content = shebang + "\n" + props + "\n" + content;
+		writeFile(file:"generictest.sh", text:content);
+		content = null;
+		props = null;
+
+		shunit("generictest", "${generictest}", "bash generictest.sh");
 	}
 
 	def result = junit_result("${generictestdir}/pyjutest.xml");
-	archiveArtifacts("${generictestdir}/pyjutest.xml");
+	archiveArtifacts("${generictestdir}/pyjutest.xml, ${generictestdir}/generictest.sh");
 }
 
 def call(Map global, String target, String generictest) {
