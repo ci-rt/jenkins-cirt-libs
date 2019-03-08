@@ -92,14 +92,33 @@ private runner(Map global, String repo, String branch,
 
 			/* Extract gittag information for db entry */
 			dir(resultdir) {
+				def gitdescr = libraryResource('de/linutronix/cirt/compiletest/gitdescribe.sh');
+				writeFile file:"gitdescribe.sh", text:gitdescr;
+				gitdescr = null;
+
 				/*
-				 * When "git describe HEAD" does not work more
-				 * history depth is required; it is possible
-				 * as well to "unshallow" the git repository.
+				 * start with #!/bin/bash to circumvent Jenkins default shell
+				 * options "-xe". Otherwise stderr is poluted with confusing
+				 * shell trace output and bedevil the user notification.
 				 */
-				sh 'git describe HEAD || git fetch --depth 1000';
-				sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
-				sh """echo "TAGS_NAME=\$(git describe HEAD)" >> gittags.properties""";
+				def gitscript = "#!/bin/bash\n. gitdescribe.sh >> gittags.properties"
+
+				/*
+				 * gitdescribe.sh returns:
+				 * 0 on success
+				 * 1 on error ('git describe HEAD' is empty)
+				 */
+				def ret = sh(script: gitscript, returnStatus: true);
+
+				switch(ret) {
+				case 0:
+					break;
+				case 1:
+					error("gitdescribe.sh: git repository does not contain tags\n");
+					break;
+				default:
+					error("Unknown abort in gitdescribe.sh");
+				}
 			}
 
 			/*
