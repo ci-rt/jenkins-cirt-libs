@@ -90,42 +90,15 @@ private runner(Map global, String repo, String branch,
 			unstash(global.STASH_PATCHES);
 			sh("if [ -d patches ] ; then quilt push -a ; fi");
 
-			/* Extract gittag information for db entry */
-			dir(resultdir) {
-				def gitdescr = libraryResource('de/linutronix/cirt/compiletest/gitdescribe.sh');
-				writeFile file:"gitdescribe.sh", text:gitdescr;
-				gitdescr = null;
-
-				/*
-				 * start with #!/bin/bash to circumvent Jenkins default shell
-				 * options "-xe". Otherwise stderr is poluted with confusing
-				 * shell trace output and bedevil the user notification.
-				 */
-				def gitscript = "#!/bin/bash\n. gitdescribe.sh >> gittags.properties"
-
-				/*
-				 * gitdescribe.sh returns:
-				 * 0 on success
-				 * 1 on error ('git describe HEAD' is empty)
-				 */
-				def ret = sh(script: gitscript, returnStatus: true);
-
-				switch(ret) {
-				case 0:
-					break;
-				case 1:
-					error("gitdescribe.sh: git repository does not contain tags\n");
-					break;
-				default:
-					error("Unknown abort in gitdescribe.sh");
-				}
-			}
-
 			/*
-			 * Create builddir and create empty .config
+			 * Create resultdir and create empty compile-script.sh
+			 * Create builddir and create empty .config;
 			 * TODO: better solution for an empty
 			 * builddir(new File(NAME).mkdir())?
 			 */
+			dir(resultdir) {
+				sh '''touch compile-script.sh''';
+			}
 			dir(builddir) {
 				sh '''touch .config''';
 			}
@@ -222,7 +195,6 @@ fi
 		stash(name: compiledir.replaceAll('/','_'),
 		      includes: "${compiledir}/${resultdir}/pyjutest.xml, " +
 		      "${compiledir}/${resultdir}/compile-script.sh, " +
-		      "${compiledir}/${resultdir}/gittags.properties, " +
 		      "${compiledir}/${resultdir}/package.log, " +
 		      "${compiledir}/${resultdir}/config, " +
 		      "${compiledir}/${resultdir}/compile.log, " +
@@ -242,8 +214,6 @@ private failnotify(Map global, String repo, String branch, String config,
 		def results = "results/${config}/${overlay}";
 		unstash(results.replaceAll('/','_'));
 
-		def gittags = readFile "${results}/compile/gittags.properties";
-		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 		if (!overlayerrors?.trim()) {
 			overlayerrors = "";
 		}
@@ -256,7 +226,6 @@ private failnotify(Map global, String repo, String branch, String config,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
 			"overlay": overlay,
-			"gittags": gittags,
 			"overlayerrors": overlayerrors]);
 	}
 }

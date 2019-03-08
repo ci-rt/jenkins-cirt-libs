@@ -52,10 +52,6 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 			}
 
 			dir(unstashDir) {
-				String gittagsprop = compiledir + "/compile/gittags.properties";
-				String[] properties = [gittagsprop]
-				helper.add2environment(properties);
-
 				collectBoottests(config, overlay, helper);
 				lastRun = (i == configs.size() - 1 && j == overlays.size() - 1);
 
@@ -186,7 +182,9 @@ def call(Map global) {
 			deleteDir();
 
 			unstash(global.STASH_PRODENV);
-			String[] properties = ["environment.properties"];
+			unstash(global.STASH_GITTAGS);
+			String[] properties = ["environment.properties",
+					       "gittags.properties"];
 			h = new helper();
 
 			h.add2environment(properties);

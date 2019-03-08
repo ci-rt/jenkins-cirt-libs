@@ -9,6 +9,39 @@ import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
+def extractGitTagsInfo(Map global) {
+	def gitdescr = libraryResource('de/linutronix/cirt/compiletest/gitdescribe.sh');
+	writeFile file:"gitdescribe.sh", text:gitdescr;
+	gitdescr = null;
+
+	/*
+	 * start with #!/bin/bash to circumvent Jenkins default shell
+	 * options "-xe". Otherwise stderr is poluted with confusing
+	 * shell trace output and bedevil the user notification.
+	 */
+	def gitscript = "#!/bin/bash\n. gitdescribe.sh >> gittags.properties"
+
+	/*
+	 * gitdescribe.sh returns:
+	 * 0 on success
+	 * 1 on error ('git describe HEAD' is empty)
+	 */
+	def ret = sh(script: gitscript, returnStatus: true);
+
+	switch(ret) {
+	case 0:
+		break;
+	case 1:
+		error("No git tags are set");
+	default:
+		error("Unknown abort in gitdescribe.sh");
+	}
+
+	/* Create STASH_GITTAGS */
+	stash(includes: 'gittags.properties',
+	      name: global.STASH_GITTAGS);
+}
+
 def call(Map global) {
 	try {
 		node ('kernel') {
@@ -29,6 +62,8 @@ def call(Map global) {
 				dir('src') {
 					def ref = env.LINUX_KERNEL_MIRROR;
 					gitCheckout(gitrepo, gitcheckout, ref);
+
+					extractGitTagsInfo(global);
 				}
 			}
 		}

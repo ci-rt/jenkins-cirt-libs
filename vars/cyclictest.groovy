@@ -32,9 +32,6 @@ private failnotify(Map global, helper h, String target,
 		 */
 		sh("cp ../${cyclictestdir}/histogram.* .");
 
-		def gittags = readFile "${results}/compile/gittags.properties";
-		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
-
 		notify("${recipients}",
 		       "cyclictest-runner failed!",
 		       "cyclictestRunner",
@@ -44,8 +41,7 @@ private failnotify(Map global, helper h, String target,
 			"branch": branch, "config": config,
 			"overlay": overlay, "target": target,
 			"limit": limit, "interval": interval,
-			"loadgen": loadgen, "cyclictestdir": cyclictestdir,
-			"gittags": gittags]);
+			"loadgen": loadgen, "cyclictestdir": cyclictestdir]);
 	}
 }
 

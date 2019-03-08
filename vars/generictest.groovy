@@ -23,9 +23,6 @@ private failnotify(Map global, helper h, String target,
 		deleteDir();
 		unstash(results.replaceAll('/','_'));
 
-		def gittags = readFile "${results}/compile/gittags.properties";
-		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
-
 		notify("${recipients}",
 		       "generictest-runner failed!",
 		       "generictestRunner",
@@ -34,8 +31,7 @@ private failnotify(Map global, helper h, String target,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
 			"overlay": overlay, "target": target,
-			"testscript": testscript,
-			"gittags": gittags]);
+			"testscript": testscript]);
 	}
 }
 

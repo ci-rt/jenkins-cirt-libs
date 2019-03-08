@@ -67,6 +67,16 @@ def call(String to, String subject, String templatename, String attachment,
 			println("Send Email notification to ${to}");
 			println("Email template: ${templatename}");
 
+			if (variables && variables['global']) {
+				def glob = variables['global'];
+				unstash(glob.STASH_GITTAGS);
+				if (fileExists("gittags.properties")) {
+					def gittags = readFile "gittags.properties";
+					gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
+					variables['gittags'] = gittags;
+				}
+			}
+
 			variables << env.getEnvironment();
 			variables['GIT_URL'] = env.GIT_URL;
 			variables['GIT_COMMIT'] = env.GIT_COMMIT;

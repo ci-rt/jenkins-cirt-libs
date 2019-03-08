@@ -356,9 +356,6 @@ private failnotify(Map global, String subject, String template, String repo,
 			}
 		}
 
-		def gittags = readFile "${results}/compile/gittags.properties";
-		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
-
 		notify("${recipients}",
 		       "${subject}",
 		       "${template}",
@@ -366,8 +363,7 @@ private failnotify(Map global, String subject, String template, String repo,
 		       false,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
-			"overlay": overlay, "target": target,
-			"gittags": gittags] + extras);
+			"overlay": overlay, "target": target] + extras);
 	}
 }
 

@@ -35,6 +35,7 @@ def call(body) {
 			string(defaultValue: "${presets.STASH_PRODENV ?: 'prodenv'}", description: '', name: 'STASH_PRODENV')
 			string(defaultValue: "${presets.STASH_RAWENV ?: 'rawenvironment'}", description: '', name: 'STASH_RAWENV')
 			string(defaultValue: "${presets.STASH_COMPILECONF ?: 'compileconf'}", description: '', name: 'STASH_COMPILECONF')
+			string(defaultValue: "${presets.STASH_GITTAGS ?: 'gittagsstash'}", description: '', name: 'STASH_GITTAGS')
 			string(defaultValue: "${presets.GUI_DB_HOSTNAME ?: 'localhost:5432'}", description: 'Hostname of database', name: 'GUI_DB_HOSTNAME')
 			string(defaultValue: "${presets.GUI_COMMIT ?: ''}", description: '', name: 'GUI_COMMIT')
 			string(defaultValue: "${presets.GUI_FAILURE_NOTIFICATION}", description: 'Notify in case of test system failure', name: 'GUI_FAILURE_NOTIFICATION')
