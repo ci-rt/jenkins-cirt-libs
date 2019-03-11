@@ -68,6 +68,15 @@ def call(body) {
 				}
 			}
 
+			stage('notify test start') {
+				steps {
+					notify("${recipients}",
+					       "Start",
+					       "start",
+					       false);
+				}
+			}
+
 			stage('checkout kernel source') {
 				steps {
 					script {
@@ -89,15 +98,6 @@ def call(body) {
 							error("kernel checkout failed.");
 						}
 					}
-				}
-			}
-
-			stage('notify test start') {
-				steps {
-					notify("${recipients}",
-					       "Start",
-					       "start",
-					       false);
 				}
 			}
 
