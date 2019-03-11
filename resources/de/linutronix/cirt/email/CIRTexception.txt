@@ -1,11 +1,9 @@
 <%-- SPDX-License-Identifier: MIT --%>
-<%-- Copyright (c) 2018 Linutronix GmbH --%>
-CI-RT Testjob ${BRANCH_NAME} #${BUILD_NUMBER} has an invalid test description
-
-Please check your test description and set all mandatory environment
-variables:
+<%-- Copyright (c) 2018,2019 Linutronix GmbH --%>
+CI-RT Testjob ${BRANCH_NAME} #${BUILD_NUMBER}
 
 ${failureText}
+
 
 Further test-description git information:
 git url: ${GIT_URL}

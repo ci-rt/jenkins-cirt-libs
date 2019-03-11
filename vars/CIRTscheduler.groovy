@@ -92,7 +92,7 @@ def call(body) {
 						} catch(VarNotSetException ex) {
 							notify("${recipients}",
 							       "Testdescription is not valid",
-							       "invalidDescr",
+							       "CIRTexception",
 							       null,
 							       false,
 							       ["failureText": ex.toString()]);
@@ -121,7 +121,7 @@ def call(body) {
 						} catch(VarNotSetException ex) {
 							notify("${recipients}",
 							       "Testdescription is not valid",
-							       "invalidDescr",
+							       "CIRTexception",
 							       null,
 							       false,
 							       ["failureText": ex.toString()]);
@@ -157,7 +157,7 @@ def call(body) {
 							} catch(VarNotSetException ex) {
 								notify("${recipients}",
 								       "Testdescription is not valid",
-								       "invalidDescr",
+								       "CIRTexception",
 								       null,
 								       false,
 								       ["failureText": ex.toString()]);

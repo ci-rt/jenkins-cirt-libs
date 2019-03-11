@@ -63,7 +63,7 @@ def call(Map global, String target, String[] generictests, String recipients) {
 		 */
 		notify("${recipients}",
 		       "Testdescription is not valid",
-		       "invalidDescr",
+		       "CIRTexception",
 		       null,
 		       false,
 		       ["failureText": ex.toString()]);
