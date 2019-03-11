@@ -22,7 +22,7 @@
  *
  */
 
-def call (String repo, String branch, String reference) {
+def call (String repo, String branch, String reference, Boolean notags) {
 	ArrayList extensions = [];
 
 	Map gitopts = [$class: 'GitSCM',
@@ -32,7 +32,7 @@ def call (String repo, String branch, String reference) {
 		       submoduleCfg: []];
 
 	Map cloneopts = [$class: 'CloneOption',
-			 depth: 1, noTags: false,
+			 depth: 1, noTags: notags,
 			 shallow: true, timeout: 60];
 
 	if (reference) {
@@ -46,6 +46,10 @@ def call (String repo, String branch, String reference) {
 
 	def srcstash = "${repo}_${branch}".replaceAll(/[\/:]/,'_');
 	stash(name: srcstash, useDefaultExcludes: false);
+}
+
+def call(String repo, String branch, String reference) {
+	call(repo, branch, reference, false);
 }
 
 def call(String... params) {
