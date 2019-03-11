@@ -16,6 +16,13 @@ def call(body) {
 	body.delegate = presets
 	body()
 
+	/*
+	 * Prevent executing tests and feeding database, when there was an known
+	 * error in stage 'checkout kernel source'. On unknown errors pipeline
+	 * is aborted anyway.
+	 */
+	def checkoutError = false;
+
 	pipeline {
 		agent any;
 
@@ -90,6 +97,7 @@ def call(body) {
 							       false,
 							       ["failureText": ex.toString()]);
 							currentBuild.result = 'UNSTABLE';
+							checkoutError = true;
 						} catch(Exception ex) {
 							println("kernel checkout failed:");
 							println(ex.toString());
@@ -104,6 +112,10 @@ def call(body) {
 			stage('compile') {
 				steps {
 					script {
+						if (checkoutError) {
+							/* Abort this stage */
+							return;
+						}
 						try {
 							compiletest(params);
 						} catch(VarNotSetException ex) {
@@ -136,6 +148,10 @@ def call(body) {
 							  usernameVariable: 'DB_USER',
 							  passwordVariable: 'DB_PASS']]) {
 						script {
+							if (checkoutError) {
+								/* Abort this stage */
+								return;
+							}
 							try {
 								feeddatabase(params);
 							} catch(VarNotSetException ex) {
