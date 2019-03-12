@@ -10,7 +10,7 @@ import de.linutronix.cirt.NoGitTagsException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
-def extractGitTagsInfo(Map global, String repo, String branch) {
+def extractGitTagsInfo(Map global, String repo, String branch, Boolean regrtest) {
 	def gitdescr = libraryResource('de/linutronix/cirt/compiletest/gitdescribe.sh');
 	writeFile file:"gitdescribe.sh", text:gitdescr;
 	gitdescr = null;
@@ -20,7 +20,7 @@ def extractGitTagsInfo(Map global, String repo, String branch) {
 	 * options "-xe". Otherwise stderr is poluted with confusing
 	 * shell trace output and bedevil the user notification.
 	 */
-	def gitscript = "#!/bin/bash\n. gitdescribe.sh false >> gittags.properties"
+	def gitscript = "#!/bin/bash\n. gitdescribe.sh ${regrtest} >> gittags.properties"
 
 	/*
 	 * gitdescribe.sh returns:
@@ -61,13 +61,14 @@ def call(Map global) {
 
 				gitrepo = h.getVar('GITREPO');
 				gitcheckout = h.getVar('GIT_CHECKOUT');
+				Boolean regrtest = h.getVar("REGRESSION_TEST_NOGITTAGS", "false").toBoolean();
 
 				h = null;
 				dir('src') {
 					def ref = env.LINUX_KERNEL_MIRROR;
-					gitCheckout(gitrepo, gitcheckout, ref);
+					gitCheckout(gitrepo, gitcheckout, ref, regrtest);
 
-					extractGitTagsInfo(global, gitrepo, gitcheckout);
+					extractGitTagsInfo(global, gitrepo, gitcheckout, regrtest);
 				}
 			}
 		}
