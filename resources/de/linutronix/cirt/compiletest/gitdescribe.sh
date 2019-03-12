@@ -6,8 +6,30 @@
 #
 # Exit status 0 on success
 # Exit status 1 when 'git describe' was not successful
+# Exit status 2 when there was a usage error
 #
 # The variables 'GIT_TAG' and 'GIT_NAME' are printed to stdout
+
+usage() {
+	>&2 echo "usage error: $0 <nogittags>"
+	>&2 echo "   nogittags: [true|false] "
+	exit 2
+}
+
+if [ $# -ne 1 ]
+then
+	usage
+fi
+
+if [ "$1" = "true" ]
+then
+	GITOPTS="--no-tags"
+elif [ "$1" = "false" ]
+then
+	GITOPTS=" "
+else
+	usage
+fi
 
 DEPTH=1000
 
@@ -18,7 +40,7 @@ DESCR="$(git describe HEAD)"
 # $DEPTH commits.
 if [ x = x"$DESCR" ]
 then
-	git fetch --depth $DEPTH
+	git fetch $GITOPTS --depth $DEPTH
 	DESCR="$(git describe HEAD)"
 fi
 

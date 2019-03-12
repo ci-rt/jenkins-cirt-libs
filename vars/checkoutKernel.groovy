@@ -20,12 +20,13 @@ def extractGitTagsInfo(Map global, String repo, String branch) {
 	 * options "-xe". Otherwise stderr is poluted with confusing
 	 * shell trace output and bedevil the user notification.
 	 */
-	def gitscript = "#!/bin/bash\n. gitdescribe.sh >> gittags.properties"
+	def gitscript = "#!/bin/bash\n. gitdescribe.sh false >> gittags.properties"
 
 	/*
 	 * gitdescribe.sh returns:
 	 * 0 on success
 	 * 1 on error ('git describe HEAD' is empty)
+	 * 2 on usage error
 	 */
 	def ret = sh(script: gitscript, returnStatus: true);
 
@@ -34,6 +35,8 @@ def extractGitTagsInfo(Map global, String repo, String branch) {
 		break;
 	case 1:
 		throw new NoGitTagsException("$repo $branch");
+	case 2:
+		error("Usage error in gitdescribe.sh");
 	default:
 		error("Unknown abort in gitdescribe.sh");
 	}
