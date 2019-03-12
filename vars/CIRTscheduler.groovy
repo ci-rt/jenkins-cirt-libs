@@ -5,6 +5,7 @@
  * CI-RT scheduler job
  */
 
+import de.linutronix.cirt.NoGitTagsException;
 import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 
@@ -93,6 +94,15 @@ def call(body) {
 						} catch(VarNotSetException ex) {
 							notify("${recipients}",
 							       "Testdescription is not valid",
+							       "CIRTexception",
+							       null,
+							       false,
+							       ["failureText": ex.toString()]);
+							currentBuild.result = 'UNSTABLE';
+							checkoutError = true;
+						} catch(NoGitTagsException ex) {
+							notify("${recipients}",
+							       "Missing git tags",
 							       "CIRTexception",
 							       null,
 							       false,

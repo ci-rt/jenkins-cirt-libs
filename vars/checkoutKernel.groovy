@@ -6,10 +6,11 @@
  */
 
 import de.linutronix.cirt.VarNotSetException;
+import de.linutronix.cirt.NoGitTagsException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
-def extractGitTagsInfo(Map global) {
+def extractGitTagsInfo(Map global, String repo, String branch) {
 	def gitdescr = libraryResource('de/linutronix/cirt/compiletest/gitdescribe.sh');
 	writeFile file:"gitdescribe.sh", text:gitdescr;
 	gitdescr = null;
@@ -32,7 +33,7 @@ def extractGitTagsInfo(Map global) {
 	case 0:
 		break;
 	case 1:
-		error("No git tags are set");
+		throw new NoGitTagsException("$repo $branch");
 	default:
 		error("Unknown abort in gitdescribe.sh");
 	}
@@ -63,12 +64,12 @@ def call(Map global) {
 					def ref = env.LINUX_KERNEL_MIRROR;
 					gitCheckout(gitrepo, gitcheckout, ref);
 
-					extractGitTagsInfo(global);
+					extractGitTagsInfo(global, gitrepo, gitcheckout);
 				}
 			}
 		}
 	} catch(Exception ex) {
-		if (ex instanceof VarNotSetException) {
+		if (ex instanceof VarNotSetException || NoGitTagsException) {
 			throw ex;
 		}
 
