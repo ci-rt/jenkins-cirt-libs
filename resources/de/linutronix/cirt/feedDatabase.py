@@ -273,7 +273,8 @@ class CirtDB():
     def __init__(self, db_type, db_host, db_user, db_pass, db_name):
         db_string = "%s://%s:%s@%s/%s" % (db_type, db_user,
                                           db_pass, db_host, db_name)
-        engine = create_engine(db_string)
+        engine = create_engine(db_string,
+                               connect_args={'options': '-csearch_path=ci-rt'})
         Base.metadata.create_all(engine)
         session = Session(engine)
 
