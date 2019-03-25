@@ -152,6 +152,7 @@ def collectBoottests(config, overlay, helper) {
 
 			kernel = "${config}/${overlay}";
 			collectCyclictests(kernel, helper);
+			collectGenerictests(kernel, helper);
 		}
 	}
 }
@@ -167,6 +168,25 @@ def collectCyclictests(kernel, helper) {
 		cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 		try {
 			unstash(cyclictestdir.replaceAll('/','_'));
+		} catch (AbortException ex) {
+			/* catch non existing stash */
+			println("Feeddatabase Info only: "+ex.toString());
+			println("Feeddatabase Info only: "+ex.getMessage());
+		}
+	}
+}
+
+def collectGenerictests(kernel, helper) {
+	def generictest;
+	def generictestdir;
+
+	def target = helper.getVar('TARGET', " ");
+	def generictests = safesplit.split(helper.getVar("GENERICTESTS", " "));
+	for (int l = 0; l < generictests?.size(); l++) {
+		generictest = generictests.getAt(l)
+		generictestdir = "results/${kernel}/${target}/${generictest}";
+		try {
+			unstash(generictestdir.replaceAll('/','_'));
 		} catch (AbortException ex) {
 			/* catch non existing stash */
 			println("Feeddatabase Info only: "+ex.toString());
