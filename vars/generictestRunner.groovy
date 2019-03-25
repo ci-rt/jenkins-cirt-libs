@@ -51,6 +51,9 @@ private runner(Map global, String target, String generictest) {
 
 	def result = junit_result("${generictestdir}/pyjutest.xml");
 	archiveArtifacts("${generictestdir}/pyjutest.xml, ${generictestdir}/generictest.sh");
+
+	stash(name: generictestdir.replaceAll('/','_'),
+	      includes: "${generictestdir}/*");
 }
 
 def call(Map global, String target, String generictest) {
