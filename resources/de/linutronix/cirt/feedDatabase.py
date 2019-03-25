@@ -269,6 +269,17 @@ class Minavgmax (Base):
     PrimaryKeyConstraint('id', 'version_id', name='mytable_pk')
 
 
+class Generictest (Base):
+    __tablename__ = 'generictest'
+    generictest_id = Column('id', Integer, primary_key=True)
+    description = Column(String(80))
+    boottest_id = Column(Integer, ForeignKey('boottest.id'))
+    pass_ = Column('pass', Boolean)
+    testscript = Column(LargeBinary)
+    owner = Column(Text)
+    testlog = Column(LargeBinary)
+
+
 class CirtDB():
     def __init__(self, db_type, db_host, db_user, db_pass, db_name):
         db_string = "%s://%s:%s@%s/%s" % (db_type, db_user,
@@ -418,6 +429,24 @@ class CirtDB():
             s.commit()
             return new_cyclictest.cyclictest_id
 
+    def submit_generictest(self, generic_result, boot_id,
+                           entry_owner, descr, system_out, generic_script):
+        new_generictest = Generictest(
+            description=descr,
+            boottest_id=boot_id,
+            # TODO: Fix proper line break usage in xml to use
+            # xml property instead of the file
+            # testscript=props["testscript"].encode("utf-8"),
+            testscript=generic_script.encode("utf-8"),
+            pass_=(generic_result == "pass"),
+            owner=entry_owner,
+            testlog=system_out.encode("utf-8")
+            )
+        with session_scope(self.session) as s:
+            s.add(new_generictest)
+            s.commit()
+            return new_generictest.generictest_id
+
     def submit_hist_data(self, hist_data, cyclic_id):
         with session_scope(self.session) as s:
             for hd in hist_data:
@@ -551,9 +580,15 @@ for boottest in boottests:
             base_path = join(result_path, boottest, "cyclictest")
             for file in glob(base_path+"/**/histogram.sh", recursive=True):
                 cyclictests.append(file.rsplit("/", 1)[0])
+
+            generictests = []
+            base_path = join(result_path, boottest, "generictest")
+            for file in glob(base_path+"/**/generictest.sh", recursive=True):
+                generictests.append(file.rsplit("/", 1)[0])
         else:
             all_tests_passed = False
             cyclictests = []
+            generictests = []
 
         for cyclic_path in cyclictests:
             junit_res = parse_junit(join(cyclic_path, "pyjutest.xml"))
@@ -579,6 +614,20 @@ for boottest in boottests:
                 thread_data,
                 cyclic_id
                 )
+
+        for generic_path in generictests:
+            junit_res = parse_junit(join(generic_path, "pyjutest.xml"))
+            with open(join(generic_path, "generictest.sh"), 'r') as fd:
+                generic_script = fd.read()
+            generic_id = db.submit_generictest(
+                junit_res["result"],
+                boot_id, entry_owner,
+                basename(generic_path),
+                junit_res["system_out"],
+                generic_script
+                )
+            all_tests_passed = all_tests_passed and \
+                (junit_res["result"] == "pass")
 
 db.update_cirtscheduler(
     scheduler_id,
