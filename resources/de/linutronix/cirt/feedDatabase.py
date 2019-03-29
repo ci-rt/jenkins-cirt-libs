@@ -241,6 +241,7 @@ class Cyclictest (Base):
     threshold = Column(Integer)
     testscript = Column(LargeBinary)
     owner = Column(Text)
+    notes = Column(String(80))
     testlog = Column(LargeBinary)
 
 
