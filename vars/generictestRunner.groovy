@@ -8,6 +8,25 @@
 import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 
+@NonCPS
+private String prepareScript(String props, String content) {
+	/* determine shebang */
+	def shebang = "#! /bin/bash"
+	if (content.substring(0, 2) == "#!") {
+		shebang = content.split('\n')[0];
+		content = content.split('\n').drop(1).join('\n');
+	}
+
+	def vars = '';
+	props.eachLine {
+		if (it =~ /GENERIC_/) {
+			vars = vars + it + '\n';
+		}
+	}
+
+	return shebang + "\n" + vars + "\n" + content;
+}
+
 private runner(Map global, String target, String generictest) {
 	unstash(global.STASH_PRODENV);
 
@@ -33,15 +52,7 @@ private runner(Map global, String target, String generictest) {
 		unstash("generictest_boot_${target}".replaceAll('/','_'));
 		println("generictest-runner: ${target} ${generictest} ${script}");
 		def content = readFile(script);
-
-		/* determine shebang */
-		def shebang = "#! /bin/bash"
-		if (content.substring(0, 2) == "#!") {
-			shebang = content.split('\n')[0];
-			content = content.split('\n').drop(1).join('\n');
-		}
-
-		content = shebang + "\n" + props + "\n" + content;
+		content = prepareScript(props, content);
 		writeFile(file:"generictest.sh", text:content);
 		content = null;
 		props = null;
