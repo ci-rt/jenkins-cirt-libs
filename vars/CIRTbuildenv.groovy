@@ -141,6 +141,20 @@ private String buildGlobalEnv(String commit) {
 	return new String(globalenv);
 }
 
+@NonCPS
+private genArchCompileEnvProperties(compile, archcompile) {
+	def map = compile.clone();
+	def properties = "";
+
+	archcompile.each { k, v -> map[k] = v }
+	map.each { k, v ->
+		if (k)
+			properties += "${k.trim()}=${v.trim()}\n";
+	}
+
+	return properties;
+}
+
 private buildArchCompileEnv(List configs)
 {
 	def compilefile;
@@ -163,7 +177,9 @@ private buildArchCompileEnv(List configs)
 		config
 	}
 
-	archs.unique().each { arch ->
+	def uniquearch = archs.unique();
+	for (int i = 0; i < uniquearch.size(); i++) {
+		def arch = uniquearch[i];
 		def archcompile;
 
 		if (fileExists("compile/env/${arch}")) {
@@ -179,13 +195,8 @@ private buildArchCompileEnv(List configs)
 
 		archcompile['ARCH'] = arch;
 
-		def map = compile.clone();
-		def properties = "";
-		archcompile.each { k, v -> map[k] = v }
-		map.each { k, v ->
-			if (k)
-				properties += "${k.trim()}=${v.trim()}\n";
-		}
+		def properties = genArchCompileEnvProperties(compile,
+							     archcompile);
 		writeFile(file:"compile/env/${arch}.properties", text:properties);
 	}
 }
@@ -304,8 +315,10 @@ fi
 }
 
 private buildCompBootEnv(List configs, List overlays) {
-	configs.each { config ->
-		overlays.each { overlay ->
+	for (int i = 0; i < configs.size(); i++) {
+		def config = configs[i];
+		for (int t = 0; t < overlays.size(); t++) {
+			def overlay = overlays[t];
 			prepareCompBootEnv(config, overlay);
 		}
 	}

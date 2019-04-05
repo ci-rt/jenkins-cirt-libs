@@ -20,6 +20,13 @@ def clearEnv() {
 	environment = [:];
 }
 
+@NonCPS
+private addProps(props) {
+	props.each {
+		k,v -> environment[k] = v;
+	};
+}
+
 def add2environment(String foldername, String[] names) {
 	for (int i = 0; i < names.size(); i++) {
 		println "Loading Property ${names.getAt(i)}"
@@ -27,9 +34,7 @@ def add2environment(String foldername, String[] names) {
 		props = readProperties (file: property);
 
 		try {
-			props.each {
-				k,v -> environment[k] = v;
-			};
+			addProps(props);
 		}
 		catch (Exception e) {
 			println e.toString();
