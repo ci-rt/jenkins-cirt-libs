@@ -100,18 +100,18 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 	}
 	sh("python3 feedDatabase feedDatabase/${unstashDir}/${compiledir}\
 		--buildnumber ${env.BUILD_NUMBER}\
-		--workspace ${env.WORKSPACE}\
+		--workspace \"${env.WORKSPACE}\" \
 		--overlay ${overlay}\
 		--config ${config}\
 		--git_branch ${env.GIT_BRANCH}\
 		--git_commit ${env.GIT_COMMIT}\
-		--gitrepo ${helper.getVar('GITREPO')}\
-		--publicrepo ${helper.getVar('PUBLICREPO')}\
-		--httprepo ${helper.getVar('HTTPREPO', " ")}\
+		--gitrepo \"${helper.getVar('GITREPO')}\" \
+		--publicrepo \"${helper.getVar('PUBLICREPO')}\" \
+		--httprepo \"${helper.getVar('HTTPREPO', " ")}\" \
 		--tags_commit ${helper.getVar('TAGS_COMMIT')}\
-		--tags_name ${helper.getVar('TAGS_NAME')}\
-		--branch ${helper.getVar('BRANCH', " ")}\
-		--entryowner ${helper.getVar('ENTRYOWNER')}\
+		--tags_name \"${helper.getVar('TAGS_NAME')}\" \
+		--branch \"${helper.getVar('BRANCH', " ")}\" \
+		--entryowner \"${helper.getVar('ENTRYOWNER')}\" \
 		--first_run ${pFirstRun} --last_run ${pLastRun}")
 }
 
