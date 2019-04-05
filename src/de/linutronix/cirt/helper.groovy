@@ -42,10 +42,6 @@ def add2environment(String[] names) {
 	add2environment(".", names);
 }
 
-def showEnv() {
-	environment.each {println it}
-}
-
 def getEnv() {
 	return environment;
 }

@@ -26,7 +26,6 @@ private compileJob(Map global, String config, String overlay,
 		def h = new helper();
 
 		h.add2environment(boottestprops);
-		h.showEnv();
 		boottests = safesplit.split(h.getVar("BOOTTESTS", " "));
 		h = null;
 
