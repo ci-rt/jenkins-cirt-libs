@@ -17,4 +17,7 @@ ${gittags}
 Check console output for detailed information at ${BUILD_URL}console
 
 generictest command:
-${testscript}
+\${FILE, path="generictest.sh"}
+
+Result:
+\${FILE, path="generictest.log"}

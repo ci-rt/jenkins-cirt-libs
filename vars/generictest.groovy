@@ -9,32 +9,6 @@ import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.helper;
 
-private failnotify(Map global, helper h, String target,
-		   String generictestdir, String recipients)
-{
-	def testscript = h.getVar("SCRIPT");
-	def repo = h.getVar("GITREPO");
-	def branch = h.getVar("BRANCH");
-	def config = h.getVar("CONFIG");
-	def overlay = h.getVar("OVERLAY");
-	def results = "results/${config}/${overlay}";
-
-	dir("failurenotification") {
-		deleteDir();
-		unstash(results.replaceAll('/','_'));
-
-		notify("${recipients}",
-		       "generictest-runner failed!",
-		       "generictestRunner",
-		       "histogram.*",
-		       false,
-		       ["global": global, "repo": repo,
-			"branch": branch, "config": config,
-			"overlay": overlay, "target": target,
-			"testscript": testscript]);
-	}
-}
-
 def call(Map global, String target, String[] generictests, String recipients) {
 	try {
 		inputcheck.check(global);
@@ -48,7 +22,8 @@ def call(Map global, String target, String[] generictests, String recipients) {
 					 * Generictest runner is executed on target;
 					 * workspace directory doesn't has to be changed
 					 */
-					generictestRunner(global, target, gt);
+					generictestRunner(global, target, gt,
+							  recipients);
 				}
 			}
 		}
