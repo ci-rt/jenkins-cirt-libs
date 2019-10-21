@@ -12,6 +12,12 @@ private runner(Map global, String target, String cyclictest) {
 
 	unstash(global.STASH_PRODENV);
 
+	def testbox = null;
+	if (target.startsWith("tb-")) {
+		testtox = target;
+		target = testbox.substring(3);
+	}
+
 	def h = new helper();
 	String[] properties = ["environment.properties",
 			       "boot/${target}.properties",
@@ -48,7 +54,12 @@ sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --
 """;
 		writeFile file:"histogram.sh", text:content;
 		content = null;
-		sh ". histogram.sh";
+		if (testbox) {
+			sh("ssh ${target} \"bash -s\" < histogram.sh");
+			sh("scp ${target}:~/histogram.* .");
+		} else {
+			sh ". histogram.sh";
+		}
 	}
 
 	archiveArtifacts("${cyclictestdir}/histogram.*");
@@ -63,23 +74,31 @@ sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --
 	 */
 }
 
-def call(Map global, String target, String cyclictest) {
+def execRunner(Map global, String target, String cyclictest)
+{
+	try {
+		dir("cyclictestRunner") {
+			deleteDir();
+			runner(global, target, cyclictest);
+		}
+	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+			throw ex;
+		}
+		println("cyclictest runner on ${target} failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("cyclictest runner on ${target} failed.");
+	}
+}
 
-	node(target) {
-		try {
-			dir("cyclictestRunner") {
-				deleteDir();
-				runner(global, target, cyclictest);
-			}
-		} catch(Exception ex) {
-			if (ex instanceof VarNotSetException) {
-				throw ex;
-			}
-			println("cyclictest runner on ${target} failed:");
-			println(ex.toString());
-			println(ex.getMessage());
-			println(ex.getStackTrace());
-			error("cyclictest runner on ${target} failed.");
+def call(Map global, String target, String cyclictest) {
+	if (target.startsWith("tb-")) {
+		execRunner(global, target, cyclictest);
+	} else {
+		node(target) {
+			execRunner(global, target, cyclictest);
 		}
 	}
 }
