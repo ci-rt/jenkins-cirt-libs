@@ -419,6 +419,12 @@ private tbrunner(Map global, helper helper, String boottest,
 		bootlog = null;
 		rawbootlog = null;
 
+		def cyclictests = safesplit.split(helper.getVar("CYCLICTESTS", " "));
+		if (cyclictests) {
+                        cyclictest(global, testbox, cyclictests,
+                                   recipients);
+                }
+
 		/* Reboot after tests */
 		sh('rm -rf "/srv/tftp/jenkins/*"');
 		sh("ssh ${target} \"sudo shutdown -r -t +1\"");
