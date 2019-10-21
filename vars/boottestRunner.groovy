@@ -38,6 +38,30 @@ class ForcedRebootAndBoottestException extends RuntimeException {
         }
 }
 
+private start_seriallog(String hypervisor, String target, String seriallog,
+			String pidfile)
+{
+	def virshoutput = "virshoutput";
+
+	/* Start serial console logging on test boot */
+	/* TODO: Cleanup error handling; it is not the best solution */
+	writeFile file: virshoutput, text: '';
+	sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} 2> ${virshoutput} || echo \"virsh error!\" >> ${virshoutput}"""+'''&
+echo $! >'''+""" ${pidfile}"""
+
+	/*
+	 * Wait 5 seconds to be sure that virsh workes properly and
+	 * error file was written.
+	 */
+	sleep(time: 5, unit: 'SECONDS');
+	def output = readFile(virshoutput).trim()
+	virshoutput = null;
+	if (output) {
+		println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
+		/* TODO: throw exception; IT Problem */
+	}
+}
+
 private rebootTarget(String hypervisor, String target, String seriallog,
 		     Boolean testboot, Boolean forced, Boolean regrtest) {
 	if (testboot && forced) {
@@ -61,25 +85,7 @@ private rebootTarget(String hypervisor, String target, String seriallog,
 	 */
 
 	if (testboot) {
-		def virshoutput = "virshoutput";
-
-		/* Start serial console logging on test boot */
-		/* TODO: Cleanup error handling; it is not the best solution */
-		writeFile file: virshoutput, text: '';
-		sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} 2> ${virshoutput} || echo \"virsh error!\" >> ${virshoutput}"""+'''&
-echo $! >'''+""" ${pidfile}"""
-
-		/*
-		 * Wait 5 seconds to be sure that virsh workes properly and
-		 * error file was written.
-		 */
-		sleep(time: 5, unit: 'SECONDS');
-		def output = readFile(virshoutput).trim()
-		virshoutput = null;
-		if (output) {
-			println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
-			/* TODO: throw exception; IT Problem */
-		}
+		start_seriallog(hypervisor, target, seriallog, pidfile);
 	}
 
 	/*
@@ -330,6 +336,72 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	}
 }
 
+private tbrunner(Map global, helper helper, String boottest,
+		 String boottestdir, String resultdir, String recipients) {
+	def config = helper.getVar("CONFIG");
+	def overlay = helper.getVar("OVERLAY");
+	def testbox = helper.getVar("TARGET");
+	def target = testbox.substring(3);
+
+	println("Greetings from the TestBox ${testbox} for target ${target}");
+
+	/* remember: config and overlay may contain slashes */
+	def kernelstash = "${config}_${overlay}".replaceAll('/','_');
+
+	dir(boottestdir) {
+		deleteDir();
+		def cmdlinefile = "${resultdir}/cmdline";
+		def seriallog_default = "${resultdir}/serialboot-default.log";
+		def seriallog = "${resultdir}/serialboot.log";
+		def bootlog = "${resultdir}/boot.log";
+		def rawbootlog = "${resultdir}/rawboot.log";
+
+		/*
+		 * Create result directory and add cmdlinefile
+		 * and bootlog file with default content. This
+		 * prevents that a test system exception
+		 * (caused by a test system error) is
+		 * overwritten by a missing file exception in
+		 * the finally section.
+		 */
+		dir(resultdir) {
+			writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
+			writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
+			writeFile file:"${seriallog}" - "${resultdir}/", text:'--- no boot log available ---';
+		}
+
+		unstash(kernelstash);
+		def debfile = findFiles(glob: "compile/*.deb");
+		if (debfile.size() != 1) {
+			error("Not only a single deb file in stash. Abort");
+		}
+
+		println("Found debian file ${debfile[0]}");
+		sh('rm -rf /srv/tftp/jenkins/*');
+		dir('extract') {
+			deleteDir();
+			sh ("dpkg -x ../${debfile[0]} .");
+			sh ('find boot -maxdepth 1 -regextype posix-extended -regex \'boot/vmlinuz.*-'+env.BUILD_ID+'(-.*|$)\' -exec cp {} /srv/tftp/jenkins/bzImage \\;');
+			/* Unpack devicetrees */
+                        sh('find ../compile -name dtbs-'+env.BUILD_ID+'.tar.xz -exec tar xJf {} -C /srv/tftp/jenkins \\;');
+		}
+
+		def pidfile = "seriallogpid";
+		start_seriallog("r4d://localhost", target, seriallog, pidfile);
+
+		sh("ssh ${target} \"sudo shutdown -r -t +1\"");
+
+		sleep(time: 330, unit: 'SECONDS');
+
+		println("kill seriallog");
+		def pid = readFile(pidfile).trim();
+		pidfile = null;
+		sh "kill ${pid}";
+
+		throw new BoottestException("New boot scheme not implemented yet.");
+	}
+}
+
 private failnotify(Map global, String subject, String template, String repo,
 		   String branch, String config, String overlay,
 		   String resultdir, String recipients, String target,
@@ -410,8 +482,26 @@ def call(Map global, String boottest, String recipients) {
 			boottestdir = "results/${kernel}/${target}";
 			kernel = null;
 
-			runner(global, h, boottest, boottestdir, resultdir,
-			      recipients);
+			if (target.startsWith("tb-")) {
+				lock(target) {
+					try {
+						node(target) {
+							try {
+								tbrunner(global, h, boottest, boottestdir,
+									 resultdir, recipients);
+							} finally {
+								stash(name: boottest.replaceAll('/','_'),
+								      includes: "${boottestdir}/**");
+							}
+						}
+					} finally {
+						unstash(boottest.replaceAll('/','_'));
+					}
+				}
+			} else {
+				runner(global, h, boottest, boottestdir,
+				       resultdir, recipients);
+			}
 			h = null;
 		}
 	} catch (ForcedRebootAndBoottestException ex) {
