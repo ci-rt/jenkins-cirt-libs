@@ -377,7 +377,7 @@ private tbrunner(Map global, helper helper, String boottest,
 		}
 
 		println("Found debian file ${debfile[0]}");
-		sh('rm -rf /srv/tftp/jenkins/*');
+		sh('rm -rf "/srv/tftp/jenkins/*"');
 		dir('extract') {
 			deleteDir();
 			sh ("dpkg -x ../${debfile[0]} .");
@@ -398,7 +398,30 @@ private tbrunner(Map global, helper helper, String boottest,
 		pidfile = null;
 		sh "kill ${pid}";
 
-		throw new BoottestException("New boot scheme not implemented yet.");
+		extractSerialBootlog(seriallog, bootlog);
+		seriallog = null;
+
+		checkOnline(target, true, false);
+
+		/* write cmdline to file */
+		sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
+		cmdlinefile = null;
+
+		/* get dmesg output from target */
+		def loglevel = "emerg,alert,crit,err";
+		sh "ssh ${target} \"sudo dmesg -r\" > ${rawbootlog}";
+		/*
+		 * TODO: omit loglevel until warnings plugin
+		 * is fixed.
+		 */
+		sh "ssh ${target} \"sudo dmesg --level=${loglevel}\" > ${bootlog}";
+		loglevel = null;
+		bootlog = null;
+		rawbootlog = null;
+
+		/* Reboot after tests */
+		sh('rm -rf "/srv/tftp/jenkins/*"');
+		sh("ssh ${target} \"sudo shutdown -r -t +1\"");
 	}
 }
 
@@ -492,6 +515,7 @@ def call(Map global, String boottest, String recipients) {
 							} finally {
 								stash(name: boottest.replaceAll('/','_'),
 								      includes: "${boottestdir}/**");
+								sh('rm -rf "/srv/tftp/jenkins/*"');
 							}
 						}
 					} finally {
