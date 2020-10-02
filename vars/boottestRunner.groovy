@@ -453,14 +453,15 @@ private failnotify(Map global, String subject, String template, String repo,
 		if (!forcedboot) {
 			/* there is no bootlog for skipped targets */
 			if (template != "offlineTarget") {
-				sh("cp ../${resultdir}/boot.log .");
+				sh("cp ../${resultdir}/rawboot.log boot.log");
+				sh("gzip boot.log");
 			}
 		}
 
 		notify("${recipients}",
 		       "${subject}",
 		       "${template}",
-		       "boot.log,${results}/compile/config",
+		       "boot.log.gz,${results}/compile/config",
 		       false,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
