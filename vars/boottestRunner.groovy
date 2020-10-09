@@ -270,6 +270,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			dir(resultdir) {
 				writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
 				writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
+				writeFile file:"${rawbootllog}" - "${resultdir}/", text:'--- no boot log available ---';
 				writeFile file:"${seriallog}" - "${resultdir}/", text:'--- no boot log available ---';
 			}
 
@@ -281,7 +282,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			try {
 				rebootTarget(hypervisor, target, seriallog, true, false);
 
-				extractSerialBootlog(seriallog, bootlog);
+				extractSerialBootlog(seriallog, rawbootlog);
 				seriallog = null;
 
 				checkOnline(target, true, false);
@@ -367,6 +368,7 @@ private tbrunner(Map global, helper helper, String boottest,
 		dir(resultdir) {
 			writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
 			writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
+			writeFile file:"${rawbootlog}" - "${resultdir}/", text:'--- no boot log available ---';
 			writeFile file:"${seriallog}" - "${resultdir}/", text:'--- no boot log available ---';
 		}
 
@@ -398,7 +400,7 @@ private tbrunner(Map global, helper helper, String boottest,
 		pidfile = null;
 		sh "kill ${pid}";
 
-		extractSerialBootlog(seriallog, bootlog);
+		extractSerialBootlog(seriallog, rawbootlog);
 		seriallog = null;
 
 		checkOnline(target, true, false);
