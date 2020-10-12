@@ -270,7 +270,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			dir(resultdir) {
 				writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
 				writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
-				writeFile file:"${rawbootllog}" - "${resultdir}/", text:'--- no boot log available ---';
+				writeFile file:"${rawbootlog}" - "${resultdir}/", text:'--- no boot log available ---';
 				writeFile file:"${seriallog}" - "${resultdir}/", text:'--- no boot log available ---';
 			}
 
