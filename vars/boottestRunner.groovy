@@ -58,7 +58,6 @@ echo $! >'''+""" ${pidfile}"""
 	virshoutput = null;
 	if (output) {
 		println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
-		/* TODO: throw exception; IT Problem */
 	}
 }
 
@@ -137,9 +136,7 @@ private rebootTarget(String hypervisor, String target, String seriallog,
 	 */
 	if (testboot) {
 		println("kill seriallog");
-		def pid = readFile(pidfile).trim();
-		pidfile = null;
-		sh "kill ${pid}";
+		sh "while ps -p $(cat ${pidfile}); do sudo kill $(cat ${pidfile}); sleep 5; done"
 	}
 }
 
