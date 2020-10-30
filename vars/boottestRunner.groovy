@@ -136,7 +136,8 @@ private rebootTarget(String hypervisor, String target, String seriallog,
 	 */
 	if (testboot) {
 		println("kill seriallog");
-		sh "while ps -p $(cat ${pidfile}); do sudo kill $(cat ${pidfile}); sleep 5; done"
+		sh "while ps -p \$(cat ${pidfile}); do sudo kill \$(cat ${pidfile}); sl\
+eep 5; done"
 	}
 }
 
